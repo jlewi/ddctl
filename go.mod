@@ -1,4 +1,4 @@
-module github.com/jlewi/goapp-template
+module github.com/jlewi/ddctl
 
 go 1.22.5
 
@@ -6,6 +6,7 @@ require (
 	github.com/go-logr/zapr v1.3.0
 	github.com/google/go-cmp v0.6.0
 	github.com/jlewi/monogo v0.0.0-20240918030136-e0ca1337aea4
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0

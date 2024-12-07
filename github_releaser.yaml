@@ -1,0 +1,11 @@
+# This release automatically creates a GitHubRelease
+apiVersion: hydros.dev/v1alpha1
+kind: GitHubReleaser
+metadata:
+  name: ddctl
+  namespace: ddctl
+  labels:
+    env: release
+spec:
+  org: jlewi
+  repo: ddctl

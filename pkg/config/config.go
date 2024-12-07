@@ -20,10 +20,11 @@ import (
 //such as files, environment variables, and command line flags. After merging, viper unmarshals the configuration into the Configuration struct, which is then used throughout the application.
 
 const (
-	ConfigFlagName = "config"
-	LevelFlagName  = "level"
-	AppName        = "somegoapp"
-	ConfigDir      = "." + AppName
+	ConfigFlagName  = "config"
+	LevelFlagName   = "level"
+	AppName         = "ddctl"
+	ConfigDir       = "." + AppName
+	BaseURLFlagName = "base-url"
 )
 
 var (
@@ -46,11 +47,12 @@ type Config struct {
 	APIVersion string `json:"apiVersion" yaml:"apiVersion" yamltags:"required"`
 	Kind       string `json:"kind" yaml:"kind" yamltags:"required"`
 
-	Logging   Logging          `json:"logging" yaml:"logging"`
-	Telemetry *TelemetryConfig `json:"telemetry,omitempty" yaml:"telemetry,omitempty"`
+	Logging Logging `json:"logging" yaml:"logging"`
 
-	SomeOption string `json:"someOption,omitempty" yaml:"someOption,omitempty"`
-	
+	// BaseURL is the base URL in the Honeycomb UI for your environment.
+	// This is used to construct URLs to Honeycomb queries.
+	BaseURL string `json:"baseURL" yaml:"baseURL"`
+
 	// configFile is the configuration file used
 	configFile string
 }
@@ -69,13 +71,10 @@ type LogSink struct {
 	Path string `json:"path,omitempty" yaml:"path,omitempty"`
 }
 
-type TelemetryConfig struct {
-	Honeycomb *HoneycombConfig `json:"honeycomb,omitempty" yaml:"honeycomb,omitempty"`
-}
-
-type HoneycombConfig struct {
-	// APIKeyFile is the Honeycomb API key
-	APIKeyFile string `json:"apiKeyFile" yaml:"apiKeyFile"`
+func (c *Config) GetBaseURL() string {
+	// Strip trailing slash to normalize URLs
+	c.BaseURL = strings.TrimSuffix(c.BaseURL, "/")
+	return c.BaseURL
 }
 
 func (c *Config) GetLogLevel() string {
@@ -108,19 +107,6 @@ func (c *Config) GetConfigDir() string {
 func (c *Config) IsValid() []string {
 	problems := make([]string, 0, 1)
 	return problems
-}
-
-func (c *Config) UseHoneycomb() bool {
-	if c.Telemetry == nil {
-		return false
-	}
-	if c.Telemetry.Honeycomb == nil {
-		return false
-	}
-	if c.Telemetry.Honeycomb.APIKeyFile == "" {
-		return false
-	}
-	return true
 }
 
 // DeepCopy returns a deep copy.
@@ -178,11 +164,17 @@ func InitViperInstance(v *viper.Viper, cmd *cobra.Command) error {
 	keyToflagName := map[string]string{
 		ConfigFlagName:             ConfigFlagName,
 		"logging." + LevelFlagName: LevelFlagName,
+		"baseURL":                  BaseURLFlagName,
 	}
 
 	if cmd != nil {
 		for key, flag := range keyToflagName {
-			if err := v.BindPFlag(key, cmd.Flags().Lookup(flag)); err != nil {
+			// Not all flags will be present for all commands.
+			f := cmd.Flags().Lookup(flag)
+			if f == nil {
+				continue
+			}
+			if err := v.BindPFlag(key, f); err != nil {
 				return err
 			}
 		}
