@@ -2,12 +2,12 @@ package ddog
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"log"
+	"maps"
 	"net/url"
-	"sort"
-	"strings"
+	"slices"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // TimeAndDurationToRange returns the query arguments for the given time range
@@ -42,7 +42,9 @@ func GetLogsLink(baseUrl string, query map[string]string) string {
 	queryParams := url.Values{}
 
 	// Add map values to the url.Values object
-	for key, value := range query {
+	// Do it in sorted order so links are deterministic
+	for _, key := range slices.Sorted(maps.Keys(query)) {
+		value := query[key]
 		queryParams.Add(key, value)
 	}
 
@@ -50,37 +52,4 @@ func GetLogsLink(baseUrl string, query map[string]string) string {
 	encodedQuery := queryParams.Encode()
 	u := fmt.Sprintf("%s/logs?%s", baseUrl, encodedQuery)
 	return u
-}
-
-func buildLogsQuery(labels map[string]string) string {
-	// We want the names to appear in sorted order in the link so the link is deterministic.
-	names := make([]string, 0, len(labels))
-	for n := range labels {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-
-	labelsQuery := []string{}
-	for _, n := range names {
-		labelsQuery = append(labelsQuery, fmt.Sprintf(`%s:"%s"`, n, labels[n]))
-	}
-	return url.QueryEscape(strings.Join(labelsQuery, " "))
-}
-
-func parseUrl(rawURL string) {
-	// Parse the URL
-	parsedURL, err := url.Parse(rawURL)
-	if err != nil {
-		log.Fatalf("Error parsing URL: %v", err)
-	}
-
-	// Extract query parameters
-	queryParams := parsedURL.Query()
-
-	// Iterate over all query parameters
-	for key, values := range queryParams {
-		for _, value := range values {
-			fmt.Printf("%s: %s\n", key, value)
-		}
-	}
 }

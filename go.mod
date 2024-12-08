@@ -1,6 +1,6 @@
 module github.com/jlewi/ddctl
 
-go 1.22.5
+go 1.23.4
 
 require (
 	github.com/go-logr/zapr v1.3.0

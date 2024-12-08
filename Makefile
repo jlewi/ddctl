@@ -1,5 +1,4 @@
 ROOT := $(shell git rev-parse --show-toplevel)
-PROJECT := chat-lewi
 
 GIT_SHA := $(shell git rev-parse HEAD)
 GIT_SHA_SHORT := $(shell git rev-parse --short HEAD)
@@ -11,7 +10,7 @@ LDFLAGS := -s -w \
         -X 'github.com/jlewi/ddctl/pkg/version.Commit=$(GIT_SHA)'
 
 build: build-dir
-	CGO_ENABLED=0 go build -o .build/someapp -ldflags="$(LDFLAGS)" github.com/jlewi/ddctl
+	CGO_ENABLED=0 go build -o .build/ddctl -ldflags="$(LDFLAGS)" github.com/jlewi/ddctl
 
 build-dir:
 	mkdir -p .build

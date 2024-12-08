@@ -1,12 +1,13 @@
 package config
 
 import (
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/spf13/viper"
 )
 
 func Test_UpdateViperConfig(t *testing.T) {
@@ -21,12 +22,12 @@ func Test_UpdateViperConfig(t *testing.T) {
 		{
 			name:       "model",
 			configFile: "empty.yaml",
-			expression: "SomeOption=some-value",
+			expression: "baseURL=some-value",
 			expected: &Config{
 				Logging: Logging{
 					Level: "",
 				},
-				SomeOption: "some-value",
+				BaseURL: "some-value",
 			},
 		},
 	}
