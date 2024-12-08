@@ -20,14 +20,23 @@ func Test_GetLogsLink(t *testing.T) {
 	startString := "2024-12-06 15:20 PST"
 	endString := "2024-12-06 15:40 PST"
 
+	// Load the location for PST
+	location, err := time.LoadLocation("America/Los_Angeles")
+	if err != nil {
+		t.Fatalf("Error loading location: %v\n", err)
+		return
+	}
+
 	// Parse the time string using ParseInLocation to include timezone information
-	startTime, err := time.Parse(layout, startString)
+	// N.B. When we used time.Parse we weren't getting the same values when running in GHA as when running locally.
+	// So I don't know that time.Parse properly deals with timezones that aren't specified as offsets.
+	startTime, err := time.ParseInLocation(layout, startString, location)
 	if err != nil {
 		t.Fatalf("Error parsing start time: %v", err)
 		return
 	}
 
-	endTime, err := time.Parse(layout, endString)
+	endTime, err := time.ParseInLocation(layout, endString, location)
 	if err != nil {
 		t.Fatalf("Error parsing end time: %v", err)
 		return
