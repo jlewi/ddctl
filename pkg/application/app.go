@@ -2,13 +2,14 @@ package application
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/jlewi/ddctl/pkg/config"
 	"github.com/jlewi/monogo/gcp/logging"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
-	"os"
-	"strings"
 )
 
 type App struct {

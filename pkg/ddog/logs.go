@@ -2,12 +2,13 @@ package ddog
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"log"
 	"net/url"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // TimeAndDurationToRange returns the query arguments for the given time range

@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/jlewi/ddctl/cmd"
 	"os"
+
+	"github.com/jlewi/ddctl/cmd"
 )
 
 func main() {

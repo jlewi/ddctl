@@ -58,7 +58,7 @@ func Test_GetLogsLink(t *testing.T) {
 			Expected: "https://datadoghq.com/logs?agg_m=count&agg_m_source=base&agg_t=count&cols=host%2Cservice&fromUser=true&from_ts=1733527200000&live=false&messageDisplay=inline&query=service%3Afoyle+%40contextId%3A01JEF30X8B9A8K5M7XGQMAPQ2Y&refresh_mode=sliding&storage=flex_tier&stream_sort=desc&to_ts=1733528400000&viz=stream",
 		},
 	}
-	
+
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
 			actual := GetLogsLink(c.BaseURL, c.LogQuery)

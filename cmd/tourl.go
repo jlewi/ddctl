@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/go-logr/zapr"
 	"github.com/jlewi/ddctl/pkg/application"
 	"github.com/jlewi/ddctl/pkg/config"
@@ -12,8 +15,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
-	"os"
-	"time"
 )
 
 // NewQueryToURL creates a command to turn queries into URLs
