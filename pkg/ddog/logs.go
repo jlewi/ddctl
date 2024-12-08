@@ -3,9 +3,9 @@ package ddog
 import (
 	"fmt"
 	"log"
+	"maps"
 	"net/url"
-	"sort"
-	"strings"
+	"slices"
 	"time"
 
 	"github.com/pkg/errors"
@@ -43,7 +43,9 @@ func GetLogsLink(baseUrl string, query map[string]string) string {
 	queryParams := url.Values{}
 
 	// Add map values to the url.Values object
-	for key, value := range query {
+	// Do it in sorted order so links are deterministic
+	for _, key := range slices.Sorted(maps.Keys(query)) {
+		value := query[key]
 		queryParams.Add(key, value)
 	}
 
@@ -51,21 +53,6 @@ func GetLogsLink(baseUrl string, query map[string]string) string {
 	encodedQuery := queryParams.Encode()
 	u := fmt.Sprintf("%s/logs?%s", baseUrl, encodedQuery)
 	return u
-}
-
-func buildLogsQuery(labels map[string]string) string {
-	// We want the names to appear in sorted order in the link so the link is deterministic.
-	names := make([]string, 0, len(labels))
-	for n := range labels {
-		names = append(names, n)
-	}
-	sort.Strings(names)
-
-	labelsQuery := []string{}
-	for _, n := range names {
-		labelsQuery = append(labelsQuery, fmt.Sprintf(`%s:"%s"`, n, labels[n]))
-	}
-	return url.QueryEscape(strings.Join(labelsQuery, " "))
 }
 
 func parseUrl(rawURL string) {
