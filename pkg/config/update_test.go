@@ -22,12 +22,12 @@ func Test_UpdateViperConfig(t *testing.T) {
 		{
 			name:       "model",
 			configFile: "empty.yaml",
-			expression: "SomeOption=some-value",
+			expression: "baseURL=some-value",
 			expected: &Config{
 				Logging: Logging{
 					Level: "",
 				},
-				SomeOption: "some-value",
+				BaseURL: "some-value",
 			},
 		},
 	}
