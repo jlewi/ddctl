@@ -2,7 +2,6 @@ package ddog
 
 import (
 	"fmt"
-	"log"
 	"maps"
 	"net/url"
 	"slices"
@@ -53,22 +52,4 @@ func GetLogsLink(baseUrl string, query map[string]string) string {
 	encodedQuery := queryParams.Encode()
 	u := fmt.Sprintf("%s/logs?%s", baseUrl, encodedQuery)
 	return u
-}
-
-func parseUrl(rawURL string) {
-	// Parse the URL
-	parsedURL, err := url.Parse(rawURL)
-	if err != nil {
-		log.Fatalf("Error parsing URL: %v", err)
-	}
-
-	// Extract query parameters
-	queryParams := parsedURL.Query()
-
-	// Iterate over all query parameters
-	for key, values := range queryParams {
-		for _, value := range values {
-			fmt.Printf("%s: %s\n", key, value)
-		}
-	}
 }

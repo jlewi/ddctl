@@ -23,7 +23,7 @@ jobs:
           # https://github.com/golangci/golangci-lint/releases
           version: v1.62
           # Bump the timeout because we are hitting the default of 1m
-          args: --timeout=2m 
+          args: --timeout=2m --out-format=colored-line-number
           # These options work around the errors in this issue
           # https://github.com/golangci/golangci-lint-action/issues/244
           skip-pkg-cache: true
