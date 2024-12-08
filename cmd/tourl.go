@@ -101,7 +101,7 @@ func NewQueryToURL() *cobra.Command {
 	cmd.Flags().StringVarP(&queryFile, "query-file", "", "", "A file containing the honeycomb query")
 	cmd.Flags().StringVarP(&baseURL, config.BaseURLFlagName, "", "", "The base URL for your Datadog URLs. It should be something like https://acme.datadoghq.com")
 	cmd.Flags().BoolVarP(&open, "open", "", false, "Open the URL in a browser")
-	cmd.Flags().DurationVarP(&duration, "duration", "d", 0, "The duration for the query")
+	cmd.Flags().DurationVarP(&duration, "duration", "d", 24*time.Hour, "The duration for the query")
 	cmd.Flags().StringVarP(&endTime, "end-time", "t", "", "The end time for the query. Defaults to now if not specified.")
 	cmd.Flags().StringVarP(&layout, "layout", "l", "2006-01-02 15:04 MST", "Layout for parsing time strings")
 	return cmd
