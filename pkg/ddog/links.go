@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/go-logr/zapr"
 	"github.com/jlewi/ddctl/api"
+	"github.com/jlewi/grafctl/pkg/grafana"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net/url"
@@ -11,6 +12,14 @@ import (
 	"strconv"
 	"strings"
 )
+
+var (
+	timeParser *grafana.RelativeTimeParser
+)
+
+func init() {
+	timeParser = grafana.NewRelativeTimeParser()
+}
 
 func addString(values url.Values, name string, value string) {
 	if value == "" {
@@ -20,10 +29,34 @@ func addString(values url.Values, name string, value string) {
 	values.Add(name, value)
 }
 
+// relativeToAbsoluteTime handles time expressions with "now" in them.
+func relativeToAbsoluteTime(timeVal string) (string, error) {
+	if !strings.Contains(timeVal, "now") {
+		return timeVal, nil
+	}
+
+	newTime, err := timeParser.ParseGrafanaRelativeTime(timeVal)
+	if err != nil {
+		return "", errors.Wrapf(err, "Error parsing relative time %v", timeVal)
+	}
+
+	// Datadog is unix epoch in milliseconds
+	newTimestr := fmt.Sprintf("%d", newTime.Unix()*1000)
+	return newTimestr, nil
+}
+
 func BuildURL(link *api.DatadogLink) (string, error) {
 	// Create a new url.Values object
 	queryParams := url.Values{}
 
+	from_ts, err := relativeToAbsoluteTime(link.FromTS)
+	if err != nil {
+		return "", errors.Wrapf(err, "Error converting from_ts relative to absolute time for %v", link.FromTS)
+	}
+	to_ts, err := relativeToAbsoluteTime(link.ToTS)
+	if err != nil {
+		return "", errors.Wrapf(err, "Error converting to_ts relative to absolute time for %v", link.ToTS)
+	}
 	addString(queryParams, "query", link.Query)
 	addString(queryParams, "viz", link.VisualizeAs)
 	addString(queryParams, "agg_m", link.GroupInto)
@@ -36,8 +69,8 @@ func BuildURL(link *api.DatadogLink) (string, error) {
 	addString(queryParams, "agg_q_source", link.GroupBySource)
 	addString(queryParams, "agg_t", link.AggType)
 	addString(queryParams, "refresh_mode", link.RefreshMode)
-	addString(queryParams, "from_ts", link.FromTS)
-	addString(queryParams, "to_ts", link.ToTS)
+	addString(queryParams, "from_ts", from_ts)
+	addString(queryParams, "to_ts", to_ts)
 	addString(queryParams, "fromUser", link.FromUser)
 	addString(queryParams, "top_n", strconv.Itoa(link.TopN))
 	addString(queryParams, "top_o", link.TopO)

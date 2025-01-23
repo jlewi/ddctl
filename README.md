@@ -62,29 +62,40 @@ query e.g
 ```bash
 cat <<'EOF' > /tmp/query.yaml
 apiVersion: grafctl.foyle.io/v1alpha1
-kind: GrafanaLink
-metadata:
-  labels: {}
-baseURL: https://applied-grafana-abcd.grafana.azure.com
-panes:
-  oy8:
-    datasource: effb3d
-    queries:
-      - datasource:
-          type: prometheus
-          uid: effb3d
-        expr: process_resident_memory_bytes{instance=~"(10\\.0\\.188\\.174:9153)"}
-        interval: ""
-        legendFormat: '{{instance}}'
-        range: true
-        refId: A
-    range:
-      from: "now-5m"
-      to: "now"
+apiVersion: datadog.foyle.io/v1alpha1
+kind: DatadogLink
+baseURL: https://acme.datadoghq.com
+query: RequestLoggingMiddleware env:prod service:feserver* @handler_module:*bert* -@http.method:GET -@http.method:HEAD status:error -@handler_module:*laxmod* -@handler:*laxmod*
+viz: pattern
+groupInto: count
+storage: flex_tier
+missing: "true"
+topN: 10
+source: base
+groupBy: status
+clusteringPatternFieldPath: message
+messageDisplay: inline
+streamSort: desc
+topO: top
+groupBySource: base
+aggType: count
+columns:
+    - host
+    - service
+refreshMode: paused
+fromTS: "now-5m"
+toTS: "now"
+fromUser: "true"
 EOF
-grafctl links build -p=/tmp/query.yaml --open
+ddctl links build -f=/tmp/query.yaml --open
 ```
 
 **Important** Note that EOF is enclosed in single quotes. This prevents escaping and shell interpolation. Without this
 shell escaping and interpolation can prevent the query from being encoded correctly.
+
+
+## Timestamps
+
+You can use Grafana style time expressions e.g. "now-5m" for `FromTS` and `ToTS`. `ddctl`
+automatically converts this into the unix epoch timestamps that Datadog expects.
 
