@@ -23,5 +23,6 @@ func NewRootCmd() *cobra.Command {
 	rootCmd.AddCommand(NewVersionCmd(os.Stdout))
 	rootCmd.AddCommand(NewConfigCmd())
 	rootCmd.AddCommand(NewLogsCmd())
+	rootCmd.AddCommand(NewLinksCmd())
 	return rootCmd
 }

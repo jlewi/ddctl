@@ -1,0 +1,24 @@
+apiVersion: datadog.foyle.io/v1alpha1
+kind: DatadogLink
+baseURL: https://acme.datadoghq.com
+query: RequestLoggingMiddleware env:prod service:feserver* @handler_module:*bert* -@http.method:GET -@http.method:HEAD status:error -@handler_module:*laxmod* -@handler:*laxmod*
+viz: pattern
+groupInto: count
+storage: flex_tier
+missing: "true"
+topN: 10
+source: base
+groupBy: status
+clusteringPatternFieldPath: message
+messageDisplay: inline
+streamSort: desc
+topO: top
+groupBySource: base
+aggType: count
+columns:
+    - host
+    - service
+refreshMode: paused
+fromTS: "1736927929003"
+toTS: "1736949529003"
+fromUser: "true"
