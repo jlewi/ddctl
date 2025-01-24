@@ -83,18 +83,7 @@ func BuildURL(link *api.DatadogLink) (string, error) {
 	return u, nil
 }
 
-// ParseURL parses the input URL and returns
-// baseUrl - The base URL
-// a map of query parameters
-// The panes object.
-func ParseURL(inputURL string) (string, map[string][]string, error) {
-	parsedURL, err := url.Parse(inputURL)
-	if err != nil {
-		return "", nil, errors.Wrapf(err, "failed to parse URL: %v", inputURL)
-	}
-
-	values := parsedURL.Query()
-
+func getBaseURL(parsedURL url.URL) string {
 	// Get only the scheme and host
 	baseURL := fmt.Sprintf("%s://%s", parsedURL.Scheme, parsedURL.Host)
 	// Clean the path to keep only the base path without the last segment
@@ -102,7 +91,24 @@ func ParseURL(inputURL string) (string, map[string][]string, error) {
 	baseURL = baseURL + cleanedPath
 
 	baseURL = strings.TrimSuffix(baseURL, "/")
-	return baseURL, values, nil
+	return baseURL
+}
+
+func BuildTraceURL(link *api.DatadogTrace) (string, error) {
+	// Create a new url.Values object
+	queryParams := url.Values{}
+
+	addString(queryParams, "graphType", link.GraphType)
+	addString(queryParams, "panel_tab", link.PanelTab)
+	addString(queryParams, "spanID", link.SpanID)
+	addString(queryParams, "sort", link.Sort)
+	addString(queryParams, "timeHint", link.TimeHint)
+	addString(queryParams, "shouldShowLegend", strconv.FormatBool(link.ShouldShowLegend))
+
+	// Encode the values into a query string
+	encodedQuery := queryParams.Encode()
+	u := fmt.Sprintf("%s/apm/trace/%s?%s", link.BaseURL, link.TraceID, encodedQuery)
+	return u, nil
 }
 
 // queryValueHandler is a function that takes a url.Values and returns a function
@@ -152,17 +158,11 @@ func bindToStringSlice(field *[]string) queryValHandler {
 	}
 }
 
-// URLToLink converts a URL to a DatadogLink
-func URLToLink(logUrl string) (*api.DatadogLink, error) {
-	baseUrl, queryParams, err := ParseURL(logUrl)
-	if err != nil {
-		return nil, err
-	}
-
+func LogsURLToLink(u url.URL) (*api.DatadogLink, error) {
 	link := &api.DatadogLink{
 		APIVersion:  api.LinkGVK.GroupVersion().String(),
 		Kind:        api.LinkGVK.Kind,
-		BaseURL:     baseUrl,
+		BaseURL:     getBaseURL(u),
 		ExtraParams: map[string]string{},
 	}
 
@@ -190,7 +190,7 @@ func URLToLink(logUrl string) (*api.DatadogLink, error) {
 		"messageDisplay":                bindToString(&link.MessageDisplay),
 	}
 
-	for key, value := range queryParams {
+	for key, value := range u.Query() {
 		if targetFunc, found := queryParamMap[key]; found {
 			targetFunc(value)
 		} else {
@@ -198,5 +198,63 @@ func URLToLink(logUrl string) (*api.DatadogLink, error) {
 		}
 	}
 
+	if len(link.ExtraParams) == 0 {
+		link.ExtraParams = nil
+	}
 	return link, nil
+}
+
+func TraceURLToLink(u url.URL) (*api.DatadogTrace, error) {
+	link := &api.DatadogTrace{
+		APIVersion:  api.TraceGVK.GroupVersion().String(),
+		Kind:        api.TraceGVK.Kind,
+		BaseURL:     getBaseURL(u),
+		ExtraParams: map[string]string{},
+	}
+
+	queryParamMap := map[string]queryValHandler{
+		"graphType":        bindToString(&link.GraphType),
+		"panel_tab":        bindToString(&link.PanelTab),
+		"spanID":           bindToString(&link.SpanID),
+		"sort":             bindToString(&link.Sort),
+		"timeHint":         bindToString(&link.TimeHint),
+		"shouldShowLegend": bindToBool(&link.ShouldShowLegend),
+	}
+
+	for key, value := range u.Query() {
+		if targetFunc, found := queryParamMap[key]; found {
+			targetFunc(value)
+		} else {
+			link.ExtraParams[key] = value[0]
+		}
+	}
+
+	// TraceID is the final part of the link
+	parts := strings.Split(u.Path, "/")
+	if len(parts) > 0 {
+		link.TraceID = parts[len(parts)-1]
+	}
+
+	if len(link.ExtraParams) == 0 {
+		link.ExtraParams = nil
+	}
+	return link, nil
+}
+
+// URLToLink converts a URL to a DatadogLink or DatadogTrace
+func URLToLink(inputURL string) (any, error) {
+	parsedURL, err := url.Parse(inputURL)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse URL: %v", inputURL)
+	}
+
+	if strings.HasPrefix(parsedURL.Path, "/logs") {
+		return LogsURLToLink(*parsedURL)
+	}
+
+	if strings.HasPrefix(parsedURL.Path, "/apm/trace") {
+		return TraceURLToLink(*parsedURL)
+	}
+
+	return nil, errors.Errorf("unsupported path: %v", parsedURL.Path)
 }

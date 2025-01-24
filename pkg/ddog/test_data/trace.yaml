@@ -1,0 +1,10 @@
+apiVersion: datadog.foyle.io/v1alpha1
+kind: DatadogTrace
+baseURL: https://acme.datadoghq.com
+traceID: 97db769b5b0c62ac69127dc786026bc7
+spanID: "2754376459340700567"
+graphType: waterfall
+panelTab: flamegraph
+shouldShowLegend: true
+sort: time
+timeHint: "1737673742952"

@@ -56,19 +56,30 @@ func NewBuildURL() *cobra.Command {
 
 				log := zapr.NewLogger(zap.L())
 				for _, n := range nodes {
-					link := &api.DatadogLink{}
+					var u string
 					switch n.GetKind() {
 					case api.LinkGVK.Kind:
+						link := &api.DatadogLink{}
 						if err := n.YNode().Decode(link); err != nil {
 							return errors.Wrapf(err, "Error decoding %v", n.GetKind())
+						}
+						u, err = ddog.BuildURL(link)
+						if err != nil {
+							return err
+						}
+					case api.TraceGVK.Kind:
+						link := &api.DatadogTrace{}
+						if err := n.YNode().Decode(link); err != nil {
+							return errors.Wrapf(err, "Error decoding %v", n.GetKind())
+						}
+						u, err = ddog.BuildTraceURL(link)
+						if err != nil {
+							return err
 						}
 					default:
 						log.Info("Skipping object of unknown kind", "kind", n.GetKind(), "name", n.GetName(), "knownKinds", []string{api.LinkGVK.Kind})
 					}
-					u, err := ddog.BuildURL(link)
-					if err != nil {
-						return err
-					}
+
 					fmt.Printf("Datadog URL:\n%v\n", u)
 					if open {
 						if err := browser.OpenURL(u); err != nil {
@@ -133,9 +144,13 @@ func NewParseURL() *cobra.Command {
 					o = os.Stdout
 				}
 
-				link, err := ddog.URLToLink(logUrl)
+				linkAny, err := ddog.URLToLink(logUrl)
 				if err != nil {
 					return errors.Wrapf(err, "Error parsing URL")
+				}
+				link, ok := linkAny.(*api.DatadogLink)
+				if !ok {
+					return errors.Errorf("Expected a DatadogLink but got %T", link)
 				}
 				link.Metadata.Name = name
 
